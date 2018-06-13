@@ -85,7 +85,7 @@ Car.prototype.update = function(fx, fy){
 	this.score = 600 - Math.sqrt(Math.pow((this.x - fx), 2) + Math.pow((this.y - fy), 2));
 }
 
-Car.prototype.isDead = function(height, width){
+Car.prototype.isDead = function(height, width, obstacles){
 	// Die if you go outside the canvas
 	if(this.y >= height || this.y + this.height <= 0){
 		return true;
@@ -93,11 +93,33 @@ Car.prototype.isDead = function(height, width){
 	if(this.x >= width || this.x + this.width <= 0){
 		return true;
 	}
+	//Die if you hit an obstacle
+	for(var i in obstacles){
+		if(Math.abs(this.x - obstacles[i].x) < 10 && Math.abs(this.y - obstacles[i].y) < 10){
+			return true;
+		}
+	}
+
 }
 
+var Obstacle = function(json){
+	this.x = 300;
+	this.y = 300;
+	this.width = 20;
+	this.height = 20;
+
+	this.init(json);
+}
+
+Obstacle.prototype.init = function(json){
+	for(var i in json){
+		this[i] = json[i];
+	}
+}
 
 var Game = function(){
 	this.cars = [];
+	this.obstacles = [];
 	this.canvas = document.querySelector("#playground");
 	this.ctx = this.canvas.getContext("2d");
 	this.width = this.canvas.width;
@@ -118,14 +140,19 @@ var Game = function(){
 Game.prototype.start = function(){
 	this.interval = 0;
 	//Init finish line in bottom left corner
-	this.finishLineX = this.width;
+	this.finishLineX = this.width / 2;
 	this.finishLineY = this.height;
 	this.cars = [];
 	this.currentMaxScore = 0;
 	this.gen = Neuvol.nextGeneration();
 	for(var i in this.gen){
 		var c = new Car();
-		this.cars.push(c)
+		this.cars.push(c);
+	}
+	//obstacles
+	for(var i = 0; i < 2; i++){
+		var o = new Obstacle();
+		this.obstacles.push(o);
 	}
 	this.generation++;
 	this.alives = this.cars.length;
@@ -149,16 +176,18 @@ Game.prototype.update = function(){
 			} else {
 				this.cars[i].accelerate(0);
 			}
-			if(res[1] > 0.5){
-				this.cars[i].turn(Math.PI / 4);
+			if(res[1] < 0.33){
+				this.cars[i].turn(Math.PI / 6);
+			} else if (res[1] < 0.66) {
+				this.cars[i].turn(0);
 			} else {
-				this.cars[i].turn(- Math.PI / 4);
+				this.cars[i].turn(- Math.PI / 6);
 			}
 
 			this.cars[i].update(this.finishLineX, this.finishLineY);
 			this.currentMaxScore = (this.cars[i].score > this.currentMaxScore) ? this.cars[i].score : this.currentMaxScore;
 
-			if(this.cars[i].isDead(this.height, this.width)){
+			if(this.cars[i].isDead(this.height, this.width, this.obstacles)){
 				this.cars[i].alive = false;
 				this.alives--;
 				console.log(i, this.cars[i].score);
@@ -201,6 +230,12 @@ Game.prototype.display = function(){
 
 	//Playground
 	this.ctx.fillRect(0, 0, this.width, this.height);
+
+	//Obstacles
+	this.ctx.fillStyle = "#ff2000";
+	for(var i in this.obstacles){
+		this.ctx.fillRect(this.obstacles[i].x, this.obstacles[i].y, 10, 10);
+	}
 
 	//Finish Line
 	this.ctx.fillStyle = "#ff0000";
