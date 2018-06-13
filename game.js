@@ -53,8 +53,8 @@ var loadImages = function(sources, callback){
 var Car = function(json){
 	this.x = 0;
 	this.y = 0;
-	this.width = 30;
-	this.height = 40;
+	this.width = 40;
+	this.height = 30;
 
 	this.alive = true;
 	this.direction = 0;
@@ -72,20 +72,18 @@ Car.prototype.init = function(json){
 
 Car.prototype.accelerate = function(val){
 	this.speed += val;
-	// you get incentive when you move forward
-	if (val > 0) {
-		this.score += 1;
-	}
 }
 
 Car.prototype.turn = function(val){
 	this.direction += val;
 }
 
-Car.prototype.update = function(){
+Car.prototype.update = function(fx, fy){
 	this.y += this.speed;
 	// fake direction
 	this.x += this.direction;
+	//Update score with position to the finish line
+	this.score = 100 - Math.sqrt(Math.pow((this.x - fx), 2) + Math.pow((this.y - fy), 2));
 }
 
 Car.prototype.isDead = function(height, width){
@@ -114,10 +112,15 @@ var Game = function(){
 	this.backgroundx = 0;
 	this.maxScore = 0;
 	this.currentMaxScore = 0;
+	this.finishLineX = 0;
+	this.finishLineY = 0;
 }
 
 Game.prototype.start = function(){
 	this.interval = 0;
+	//Init finish line in bottom left corner
+	this.finishLineX = this.width;
+	this.finishLineY = this.height;
 	this.cars = [];
 	this.currentMaxScore = 0;
 	this.gen = Neuvol.nextGeneration();
@@ -153,7 +156,7 @@ Game.prototype.update = function(){
 				this.cars[i].turn(-1);
 			}
 
-			this.cars[i].update();
+			this.cars[i].update(this.finishLineX, this.finishLineY);
 			this.currentMaxScore = (this.cars[i].score > this.currentMaxScore) ? this.cars[i].score : this.currentMaxScore;
 
 			if(this.cars[i].isDead(this.height, this.width)){
@@ -194,13 +197,17 @@ Game.prototype.isItEnd = function(){
 
 Game.prototype.display = function(){
 	this.ctx.clearRect(0, 0, this.width, this.height);
-	for(var i = 0; i < Math.ceil(this.width / images.background.width) + 1; i++){
-		this.ctx.drawImage(images.background, i * images.background.width - Math.floor(this.backgroundx%images.background.width), 0)
-	}
 
+	this.ctx.fillStyle = "#D3D3D3";
 
-	this.ctx.fillStyle = "#FFC600";
-	this.ctx.strokeStyle = "#CE9E00";
+	//Playground
+	this.ctx.fillRect(0, 0, this.width, this.height);
+
+	//Finish Line
+	this.ctx.fillStyle = "#ff0000";
+	this.ctx.fillRect(this.finishLineX - 20 , this.finishLineY - 20, 20, 20);
+
+	//Cars
 	for(var i in this.cars){
 		if(this.cars[i].alive){
 			this.ctx.save();
