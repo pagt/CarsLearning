@@ -135,6 +135,13 @@ var Game = function(){
 	this.currentMaxScore = 0;
 	this.finishLineX = 0;
 	this.finishLineY = 0;
+	//obstacles
+	for(var i = 0; i < 2; i++){
+		var o = new Obstacle();
+		o.x = Math.random() * this.width;
+		o.y = Math.random() * this.height;
+		this.obstacles.push(o);
+	}
 }
 
 Game.prototype.start = function(){
@@ -149,11 +156,7 @@ Game.prototype.start = function(){
 		var c = new Car();
 		this.cars.push(c);
 	}
-	//obstacles
-	for(var i = 0; i < 2; i++){
-		var o = new Obstacle();
-		this.obstacles.push(o);
-	}
+
 	this.generation++;
 	this.alives = this.cars.length;
 }
