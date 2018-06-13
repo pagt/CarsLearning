@@ -75,17 +75,17 @@ Car.prototype.accelerate = function(val){
 }
 
 Car.prototype.turn = function(val){
-	this.direction = val;
+	this.direction = (this.direction + val) % 360;
 }
 
 Car.prototype.update = function(fx, fy){
-	this.y += this.speed * Math.cos(this.direction);
-	this.x += this.speed * Math.sin(this.direction);
+	this.x += this.speed * Math.cos((this.direction / 180) * Math.PI);
+	this.y += this.speed * Math.sin((this.direction / 180) * Math.PI);
 	//Update score with position to the finish line
 	this.score = 600 - Math.sqrt(Math.pow((this.x - fx), 2) + Math.pow((this.y - fy), 2));
 }
 
-Car.prototype.isDead = function(height, width, obstacles){
+Car.prototype.isDead = function(height, width, obstacles, fx, fy){
 	// Die if you go outside the canvas
 	if(this.y >= height || this.y + this.height <= 0){
 		return true;
@@ -99,7 +99,10 @@ Car.prototype.isDead = function(height, width, obstacles){
 			return true;
 		}
 	}
-
+	//Die if you hit the finish line : for training purposes
+	if(Math.abs(this.x - fx) < 10 && Math.abs(this.y - fy) < 10){
+		return true;
+	}
 }
 
 var Obstacle = function(json){
@@ -142,13 +145,13 @@ var Game = function(){
 		o.y = Math.random() * this.height;
 		this.obstacles.push(o);
 	}
+	//init finish Line
+	this.finishLineX = this.width / 2;
+	this.finishLineY = this.height / 3;
 }
 
 Game.prototype.start = function(){
 	this.interval = 0;
-	//Init finish line in bottom left corner
-	this.finishLineX = this.width / 2;
-	this.finishLineY = this.height;
 	this.cars = [];
 	this.currentMaxScore = 0;
 	this.gen = Neuvol.nextGeneration();
@@ -168,7 +171,8 @@ Game.prototype.update = function(){
 		if(this.cars[i].alive){
 
 			var inputs = [
-			this.cars[i].y
+				this.cars[i].x,
+				this.cars[i].y
 			];
 
 			//NN tells whether accelerate, brake
@@ -180,17 +184,17 @@ Game.prototype.update = function(){
 				this.cars[i].accelerate(0);
 			}
 			if(res[1] < 0.33){
-				this.cars[i].turn(Math.PI / 6);
+				this.cars[i].turn(1);
 			} else if (res[1] < 0.66) {
 				this.cars[i].turn(0);
 			} else {
-				this.cars[i].turn(- Math.PI / 6);
+				this.cars[i].turn(-1);
 			}
 
 			this.cars[i].update(this.finishLineX, this.finishLineY);
 			this.currentMaxScore = (this.cars[i].score > this.currentMaxScore) ? this.cars[i].score : this.currentMaxScore;
 
-			if(this.cars[i].isDead(this.height, this.width, this.obstacles)){
+			if(this.cars[i].isDead(this.height, this.width, this.obstacles, this.finishLineX, this.finishLineY)){
 				this.cars[i].alive = false;
 				this.alives--;
 				console.log(i, this.cars[i].score);
@@ -249,6 +253,7 @@ Game.prototype.display = function(){
 		if(this.cars[i].alive){
 			this.ctx.save();
 			this.ctx.translate(this.cars[i].x + this.cars[i].width/2, this.cars[i].y + this.cars[i].height/2);
+			this.ctx.rotate(this.cars[i].direction * Math.PI / 180);
 			this.ctx.drawImage(images.bird, -this.cars[i].width/2, -this.cars[i].height/2, this.cars[i].width, this.cars[i].height);
 			this.ctx.restore();
 		}
