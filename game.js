@@ -139,15 +139,15 @@ var Game = function(){
 	this.finishLineX = 0;
 	this.finishLineY = 0;
 	//obstacles
-	for(var i = 0; i < 2; i++){
+	for(var i = 0; i < 40; i++){
 		var o = new Obstacle();
 		o.x = Math.random() * this.width;
 		o.y = Math.random() * this.height;
 		this.obstacles.push(o);
 	}
 	//init finish Line
-	this.finishLineX = this.width / 2;
-	this.finishLineY = this.height / 3;
+	this.finishLineX = Math.random() * this.width;
+	this.finishLineY = Math.random() * this.height;
 }
 
 Game.prototype.start = function(){
