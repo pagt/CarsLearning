@@ -58,7 +58,7 @@ var Car = function(json){
 
 	this.alive = true;
 	this.direction = 0;
-	this.speed = 0;
+	this.speed = 1;
 	this.score = 0;
 
 	this.init(json);
@@ -75,15 +75,14 @@ Car.prototype.accelerate = function(val){
 }
 
 Car.prototype.turn = function(val){
-	this.direction += val;
+	this.direction = val;
 }
 
 Car.prototype.update = function(fx, fy){
-	this.y += this.speed;
-	// fake direction
-	this.x += this.direction;
+	this.y += this.speed * Math.cos(this.direction);
+	this.x += this.speed * Math.sin(this.direction);
 	//Update score with position to the finish line
-	this.score = 100 - Math.sqrt(Math.pow((this.x - fx), 2) + Math.pow((this.y - fy), 2));
+	this.score = 600 - Math.sqrt(Math.pow((this.x - fx), 2) + Math.pow((this.y - fy), 2));
 }
 
 Car.prototype.isDead = function(height, width){
@@ -148,12 +147,12 @@ Game.prototype.update = function(){
 			if(res[0] > 0.5){
 				this.cars[i].accelerate(1);
 			} else {
-				this.cars[i].accelerate(-1);
+				this.cars[i].accelerate(0);
 			}
 			if(res[1] > 0.5){
-				this.cars[i].turn(1);
+				this.cars[i].turn(Math.PI / 4);
 			} else {
-				this.cars[i].turn(-1);
+				this.cars[i].turn(- Math.PI / 4);
 			}
 
 			this.cars[i].update(this.finishLineX, this.finishLineY);
@@ -162,7 +161,7 @@ Game.prototype.update = function(){
 			if(this.cars[i].isDead(this.height, this.width)){
 				this.cars[i].alive = false;
 				this.alives--;
-				//console.log(this.alives);
+				console.log(i, this.cars[i].score);
 				Neuvol.networkScore(this.gen[i], this.cars[i].score);
 				this.maxScore = (this.cars[i].score > this.maxScore) ? this.cars[i].score : this.maxScore;
 				if(this.isItEnd()){
