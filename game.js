@@ -117,8 +117,8 @@ Car.prototype.isDead = function(height, width, obstacles, finishLine){
 var Obstacle = function(json){
 	this.x = 300;
 	this.y = 300;
-	this.width = 20;
-	this.height = 20;
+	this.width = 10;
+	this.height = 10;
 
 	this.init(json);
 }
@@ -186,6 +186,13 @@ Game.prototype.start = function(){
 
 	this.generation++;
 	this.alives = this.cars.length;
+}
+
+addObstacle = function(game, x, y){
+	var o = new Obstacle();
+	o.x = x;
+	o.y = y;
+	game.obstacles.push(o);
 }
 
 Game.prototype.update = function(){
@@ -265,7 +272,7 @@ Game.prototype.display = function(){
 	//Obstacles
 	this.ctx.fillStyle = "#ff2000";
 	for(var i in this.obstacles){
-		this.ctx.fillRect(this.obstacles[i].x, this.obstacles[i].y, 10, 10);
+		this.ctx.fillRect(this.obstacles[i].x, this.obstacles[i].y, this.obstacles[i].width, this.obstacles[i].height);
 	}
 
 	//Finish Line
@@ -290,6 +297,9 @@ Game.prototype.display = function(){
 	this.ctx.fillText("Generation : "+this.generation, 10, 75);
 	this.ctx.fillText("Alive : "+this.alives+" / "+Neuvol.options.population, 10, 100);
 
+
+
+
 	var self = this;
 	requestAnimationFrame(function(){
 		self.display();
@@ -313,6 +323,12 @@ window.onload = function(){
 		game.start();
 		game.update();
 		game.display();
+		// Drawer
+		game.canvas.addEventListener("click", function (e) {
+						 	console.log(e.clientX,  e.clientY, "clic");
+							addObstacle(game, e.clientX, e.clientY);
+
+				 }, false);
 	}
 
 
